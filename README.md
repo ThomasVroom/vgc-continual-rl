@@ -32,10 +32,6 @@ Install project dependencies by running:
 ```
 pip install .[dev]
 ```
-Setup necessary local data by running:
-```
-python vgc_bench/scrape_data.py
-```
 Setup VGC teams from regulation REG by running:
 ```
 python vgc_bench/scrape_teams.py --reg <REG>
