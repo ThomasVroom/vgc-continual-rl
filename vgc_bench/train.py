@@ -95,7 +95,7 @@ def train(
                 num_saved_timesteps = 0
             ppo.num_timesteps = num_saved_timesteps
     ppo.learn(
-        5_013_504 - num_saved_timesteps,
+        51 * save_interval - num_saved_timesteps,
         callback=Callback(
             run_id,
             num_teams,
