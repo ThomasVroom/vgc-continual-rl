@@ -3,6 +3,7 @@ import asyncio
 import os
 
 from poke_env import AccountConfiguration, ShowdownServerConfiguration
+from src.policy import MaskedActorCriticPolicy
 from src.policy_player import PolicyPlayer
 from src.teams import RandomTeamBuilder
 from src.utils import format_map
@@ -26,6 +27,8 @@ async def play(
     )
     filepath = f"{path}/{os.listdir(path)[-1]}"
     agent.policy = PPO.load(filepath, device="cuda:0").policy
+    assert isinstance(agent.policy, MaskedActorCriticPolicy)
+    agent.policy.debug = True
     print(f"Loaded model from {filepath}")
     if play_on_ladder:
         print("Entering ladder")
