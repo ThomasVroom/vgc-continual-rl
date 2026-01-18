@@ -73,7 +73,8 @@ def train(
             else 3072 // num_envs
         ),
         batch_size=64,
-        ent_coef=1e-3,
+        gamma=1,
+        ent_coef=0.02,
         tensorboard_log=f"results{run_id}/logs-{run_ident}",
         policy_kwargs={
             "num_frames": num_frames,
