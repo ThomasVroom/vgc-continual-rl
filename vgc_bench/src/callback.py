@@ -13,7 +13,6 @@ from src.policy import MaskedActorCriticPolicy
 from src.policy_player import BatchPolicyPlayer
 from src.teams import RandomTeamBuilder, TeamToggle
 from src.utils import LearningStyle
-from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import BaseCallback
 
 warnings.filterwarnings("ignore", category=UserWarning)
