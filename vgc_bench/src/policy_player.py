@@ -1,5 +1,7 @@
 import asyncio
+import io
 import random
+import zipfile
 from dataclasses import dataclass
 from typing import Any, Awaitable, Deque
 
@@ -34,6 +36,7 @@ from src.utils import (
     moves,
     pokemon_obs_len,
 )
+from stable_baselines3 import PPO
 from stable_baselines3.common.policies import BasePolicy
 
 
@@ -45,6 +48,18 @@ class PolicyPlayer(Player):
     def __init__(self, policy: BasePolicy | None = None, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
         self.policy = policy
+
+    def set_policy(self, policy_file: str, device: torch.device):
+        if self.policy is None:
+            self.policy = PPO.load(policy_file, device=device).policy
+        else:
+            # Bypass SB3's leaky set_parameters - load state dict directly from zip
+            with zipfile.ZipFile(policy_file, "r") as zf:
+                with zf.open("policy.pth") as f:
+                    state_dict = torch.load(
+                        io.BytesIO(f.read()), map_location=device, weights_only=True
+                    )
+            self.policy.load_state_dict(state_dict)
 
     def choose_move(
         self, battle: AbstractBattle

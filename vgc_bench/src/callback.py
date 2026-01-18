@@ -126,9 +126,10 @@ class Callback(BaseCallback):
                 )
             assert len(saves) > 0
         if self.learning_style == LearningStyle.EXPLOITER:
-            policy = PPO.load(f"{self.save_dir}/-1", device=self.model.device).policy
             for i in range(self.model.env.num_envs):
-                self.model.env.env_method("set_opp_policy", policy, indices=i)
+                self.model.env.env_method(
+                    "set_opp_policy", f"{self.save_dir}/-1", self.model.device, indices=i
+                )
 
     def _on_rollout_start(self):
         assert self.model.env is not None
@@ -143,14 +144,16 @@ class Callback(BaseCallback):
             LearningStyle.DOUBLE_ORACLE,
         ]:
             policy_files = os.listdir(self.save_dir)
-            policies = random.choices(
+            selected_files = random.choices(
                 policy_files, weights=self.prob_dist, k=self.model.env.num_envs
             )
             for i in range(self.model.env.num_envs):
-                policy = PPO.load(
-                    f"{self.save_dir}/{policies[i]}", device=self.model.device
-                ).policy
-                self.model.env.env_method("set_opp_policy", policy, indices=i)
+                self.model.env.env_method(
+                    "set_opp_policy",
+                    f"{self.save_dir}/{selected_files[i]}",
+                    self.model.device,
+                    indices=i,
+                )
 
     def _on_rollout_end(self):
         if self.model.num_timesteps % self.save_interval == 0:
@@ -167,9 +170,7 @@ class Callback(BaseCallback):
         policy_files = os.listdir(self.save_dir)
         win_rates = np.array([])
         for p in policy_files:
-            self.eval_agent2.policy = PPO.load(
-                f"{self.save_dir}/{p}", device=self.model.device
-            ).policy
+            self.eval_agent2.set_policy(f"{self.save_dir}/{p}", self.model.device)
             win_rate = self.compare(self.eval_agent, self.eval_agent2, 1000)
             win_rates = np.append(win_rates, win_rate)
         self.payoff_matrix = np.concat(
