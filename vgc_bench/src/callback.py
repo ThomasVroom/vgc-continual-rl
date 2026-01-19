@@ -185,7 +185,7 @@ class Callback(BaseCallback):
         ) as f:
             json.dump(
                 [
-                    [round(win_rate, 2) for win_rate in win_rates]
+                    [round(win_rate, 3) for win_rate in win_rates]
                     for win_rates in self.payoff_matrix.tolist()
                 ],
                 f,
