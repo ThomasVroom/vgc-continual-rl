@@ -9,7 +9,7 @@ This benchmark includes:
 
 # 🛠️ Setup
 Prerequisites:
-1. Python (I use v3.12)
+1. Python (I use v3.13)
 1. NodeJS and npm (whatever pokemon-showdown requires)
 
 Run the following to ensure that pokemon showdown is configured:
