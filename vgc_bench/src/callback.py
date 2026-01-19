@@ -24,6 +24,8 @@ class Callback(BaseCallback):
         run_id: int,
         num_teams: int,
         battle_format: str,
+        num_eval_workers: int,
+        log_level: int,
         port: int,
         learning_style: LearningStyle,
         behavior_clone: bool,
@@ -72,8 +74,8 @@ class Callback(BaseCallback):
                 "https://play.pokemonshowdown.com/action.php?",
             ),
             battle_format=battle_format,
-            log_level=25,
-            max_concurrent_battles=10,
+            log_level=log_level,
+            max_concurrent_battles=num_eval_workers,
             accept_open_team_sheet=True,
             open_timeout=None,
             team=RandomTeamBuilder(run_id, num_teams, battle_format, toggle),
@@ -84,8 +86,8 @@ class Callback(BaseCallback):
                 "https://play.pokemonshowdown.com/action.php?",
             ),
             battle_format=battle_format,
-            log_level=25,
-            max_concurrent_battles=10,
+            log_level=log_level,
+            max_concurrent_battles=num_eval_workers,
             accept_open_team_sheet=True,
             open_timeout=None,
             team=RandomTeamBuilder(run_id, num_teams, battle_format, toggle),
@@ -96,8 +98,8 @@ class Callback(BaseCallback):
                 "https://play.pokemonshowdown.com/action.php?",
             ),
             battle_format=battle_format,
-            log_level=25,
-            max_concurrent_battles=10,
+            log_level=log_level,
+            max_concurrent_battles=num_eval_workers,
             accept_open_team_sheet=True,
             open_timeout=None,
             team=RandomTeamBuilder(run_id, num_teams, battle_format, toggle),
@@ -109,29 +111,36 @@ class Callback(BaseCallback):
     def _on_training_start(self):
         assert self.model.env is not None
         self.eval_agent.policy = self.model.policy
+        self.starting_timestep = self.model.num_timesteps
         if self.model.num_timesteps < self.save_interval:
             win_rate = self.compare(self.eval_agent, self.eval_opponent, 1000)
             self.model.logger.record("train/eval", win_rate)
-        if not self.behavior_clone:
-            self.model.save(f"{self.save_dir}/{self.model.num_timesteps}")
-        else:
-            try:
+            if not self.behavior_clone:
+                self.model.save(f"{self.save_dir}/{self.model.num_timesteps}")
+            else:
+                assert os.path.exists(
+                    self.save_dir
+                ), "behavior_clone on, but no save directory found"
                 saves = [
                     int(f[:-4]) for f in os.listdir(self.save_dir) if int(f[:-4]) >= 0
                 ]
-            except FileNotFoundError:
-                raise FileNotFoundError(
-                    "behavior_clone on, but no model initialization found"
-                )
-            assert len(saves) > 0
+                assert len(saves) > 0, "behavior_clone on, but no save file found"
         if self.learning_style == LearningStyle.EXPLOITER:
             for i in range(self.model.env.num_envs):
                 self.model.env.env_method(
-                    "set_opp_policy", f"{self.save_dir}/-1", self.model.device, indices=i
+                    "set_opp_policy",
+                    f"{self.save_dir}/-1",
+                    self.model.device,
+                    indices=i,
                 )
 
     def _on_rollout_start(self):
         assert self.model.env is not None
+        if (
+            self.model.num_timesteps % self.save_interval == 0
+            and self.model.num_timesteps > self.starting_timestep
+        ):
+            self.record()
         self.model.logger.dump(self.model.num_timesteps)
         if self.behavior_clone:
             assert isinstance(self.model.policy, MaskedActorCriticPolicy)
@@ -154,42 +163,39 @@ class Callback(BaseCallback):
                     indices=i,
                 )
 
-    def _on_rollout_end(self):
-        if self.model.num_timesteps % self.save_interval == 0:
-            win_rate = self.compare(self.eval_agent, self.eval_opponent, 1000)
-            self.model.logger.record("train/eval", win_rate)
-            if self.learning_style == LearningStyle.DOUBLE_ORACLE:
-                self.update_payoff_matrix()
-            self.model.save(f"{self.save_dir}/{self.model.num_timesteps}")
-
     def _on_training_end(self):
+        self.record()
         self.model.logger.dump(self.model.num_timesteps)
 
-    def update_payoff_matrix(self):
-        policy_files = os.listdir(self.save_dir)
-        win_rates = np.array([])
-        for p in policy_files:
-            self.eval_agent2.set_policy(f"{self.save_dir}/{p}", self.model.device)
-            win_rate = self.compare(self.eval_agent, self.eval_agent2, 1000)
-            win_rates = np.append(win_rates, win_rate)
-        self.payoff_matrix = np.concat(
-            [self.payoff_matrix, 1 - win_rates.reshape(-1, 1)], axis=1
-        )
-        win_rates = np.append(win_rates, 0.5)
-        self.payoff_matrix = np.concat(
-            [self.payoff_matrix, win_rates.reshape(1, -1)], axis=0
-        )
-        self.prob_dist = Game(self.payoff_matrix).linear_program()[0].tolist()
-        with open(
-            f"{self.log_dir}/{self.num_teams}-teams-payoff-matrix.json", "w"
-        ) as f:
-            json.dump(
-                [
-                    [round(win_rate, 3) for win_rate in win_rates]
-                    for win_rates in self.payoff_matrix.tolist()
-                ],
-                f,
+    def record(self):
+        win_rate = self.compare(self.eval_agent, self.eval_opponent, 1000)
+        self.model.logger.record("train/eval", win_rate)
+        if self.learning_style == LearningStyle.DOUBLE_ORACLE:
+            policy_files = os.listdir(self.save_dir)
+            win_rates = np.array([])
+            for p in policy_files:
+                self.eval_agent2.set_policy(f"{self.save_dir}/{p}", self.model.device)
+                win_rate = self.compare(self.eval_agent, self.eval_agent2, 1000)
+                win_rates = np.append(win_rates, win_rate)
+            self.payoff_matrix = np.concat(
+                [self.payoff_matrix, 1 - win_rates.reshape(-1, 1)], axis=1
             )
+            win_rates = np.append(win_rates, 0.5)
+            self.payoff_matrix = np.concat(
+                [self.payoff_matrix, win_rates.reshape(1, -1)], axis=0
+            )
+            self.prob_dist = Game(self.payoff_matrix).linear_program()[0].tolist()
+            with open(
+                f"{self.log_dir}/{self.num_teams}-teams-payoff-matrix.json", "w"
+            ) as f:
+                json.dump(
+                    [
+                        [round(win_rate, 3) for win_rate in win_rates]
+                        for win_rates in self.payoff_matrix.tolist()
+                    ],
+                    f,
+                )
+        self.model.save(f"{self.save_dir}/{self.model.num_timesteps}")
 
     @staticmethod
     def compare(player1: Player, player2: Player, n_battles: int) -> float:

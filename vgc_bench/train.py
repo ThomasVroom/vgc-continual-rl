@@ -14,6 +14,8 @@ def train(
     run_id: int,
     num_teams: int,
     num_envs: int,
+    num_eval_workers: int,
+    log_level: int,
     port: int,
     device: str,
     learning_style: LearningStyle,
@@ -29,6 +31,7 @@ def train(
             run_id,
             num_teams,
             num_envs,
+            log_level,
             port,
             learning_style,
             num_frames,
@@ -43,6 +46,7 @@ def train(
                     run_id,
                     1 if learning_style == LearningStyle.EXPLOITER else num_teams,
                     num_envs,
+                    log_level,
                     port,
                     learning_style,
                     num_frames,
@@ -101,6 +105,8 @@ def train(
             run_id,
             num_teams,
             battle_format,
+            num_eval_workers,
+            log_level,
             port,
             learning_style,
             behavior_clone,
@@ -173,6 +179,12 @@ if __name__ == "__main__":
         "--num_envs", type=int, default=1, help="number of parallel envs to run"
     )
     parser.add_argument(
+        "--num_eval_workers", type=int, default=1, help="number of eval workers to run"
+    )
+    parser.add_argument(
+        "--log_level", type=int, default=25, help="log level for showdown clients"
+    )
+    parser.add_argument(
         "--port", type=int, default=8000, help="port to run showdown server on"
     )
     parser.add_argument(
@@ -207,6 +219,8 @@ if __name__ == "__main__":
         args.run_id,
         args.num_teams,
         args.num_envs,
+        args.num_eval_workers,
+        args.log_level,
         args.port,
         args.device,
         style,
