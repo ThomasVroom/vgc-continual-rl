@@ -16,6 +16,7 @@ from pathlib import Path
 from urllib.parse import quote_plus
 
 import requests
+from poke_env.teambuilder import Teambuilder
 from src.teams import calc_team_similarity_score
 
 SHEET_ID = "1axlwmzPA49rYkqXh7zHvAtSP-TKbM0ijGYBPRflLSWw"
@@ -369,6 +370,10 @@ def scrape_regulation(regulation: str) -> None:
             team_text = fetch_pokepaste_raw(session, pokepaste)
             if has_banned_move_or_ability(team_text):
                 skipped_banned += 1
+                continue
+            try:
+                Teambuilder.parse_showdown_team(team_text)
+            except KeyError:
                 continue
             if any(
                 calc_team_similarity_score(team_text, prev) == 1.0
