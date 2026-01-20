@@ -1,3 +1,10 @@
+"""
+Interactive play module for VGC-Bench.
+
+Allows a trained policy to play games on Pokemon Showdown, either by
+accepting challenges or playing on the ranked ladder.
+"""
+
 import argparse
 import asyncio
 import os
@@ -13,6 +20,19 @@ from stable_baselines3 import PPO
 async def play(
     battle_format: str, run_id: int, num_teams: int, n_games: int, play_on_ladder: bool
 ):
+    """
+    Run the trained policy in interactive play mode.
+
+    Loads a trained model and either enters the Pokemon Showdown ladder
+    or waits to accept challenges from other players.
+
+    Args:
+        battle_format: Pokemon Showdown battle format string.
+        run_id: Training run identifier for loading the model.
+        num_teams: Number of teams the model was trained with.
+        n_games: Number of games to play.
+        play_on_ladder: If True, play on ladder; if False, accept challenges.
+    """
     print("Setting up...")
     path = f"results{run_id}/saves-bc-sp/{num_teams}-teams"
     agent = PolicyPlayer(

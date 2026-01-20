@@ -1,3 +1,12 @@
+"""
+Training module for VGC-Bench.
+
+Implements reinforcement learning training for Pokemon VGC agents using PPO.
+Supports multiple training paradigms including self-play, fictitious play,
+double oracle, and exploiter training, optionally initialized with behavior
+cloning.
+"""
+
 import argparse
 import os
 
@@ -24,6 +33,28 @@ def train(
     allow_mirror_match: bool,
     chooses_on_teampreview: bool,
 ):
+    """
+    Train a Pokemon VGC policy using reinforcement learning.
+
+    Creates the training environment, initializes PPO with the appropriate
+    policy architecture, and runs training with periodic evaluation and
+    checkpointing.
+
+    Args:
+        battle_format: Pokemon Showdown battle format string.
+        run_id: Training run identifier for saving/loading.
+        num_teams: Number of teams to train with.
+        num_envs: Number of parallel environments.
+        num_eval_workers: Number of workers for evaluation battles.
+        log_level: Logging verbosity for Showdown clients.
+        port: Port for the Pokemon Showdown server.
+        device: CUDA device for training.
+        learning_style: Training paradigm (self-play, fictitious play, etc.).
+        behavior_clone: Whether to initialize from a BC-pretrained policy.
+        num_frames: Number of frames for frame stacking.
+        allow_mirror_match: Whether to allow same-team matchups.
+        chooses_on_teampreview: Whether policy makes teampreview decisions.
+    """
     save_interval = 98_304
     env = (
         ShowdownEnv.create_env(

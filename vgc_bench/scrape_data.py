@@ -1,3 +1,11 @@
+"""
+Data scraping module for VGC-Bench.
+
+Downloads Pokemon data (abilities, items, moves) from Pokemon Showdown and
+creates semantic embeddings of their descriptions using sentence transformers.
+These embeddings are used as features for the policy network.
+"""
+
 import json
 import os
 import re
@@ -9,6 +17,18 @@ from sklearn.decomposition import PCA
 
 
 def update_desc_embeddings(url: str, file: str, extras: dict[str, dict[str, str]] = {}):
+    """
+    Download Pokemon data and create PCA-reduced semantic embeddings.
+
+    Fetches a data file from Pokemon Showdown, extracts short descriptions,
+    encodes them using a sentence transformer, reduces dimensions with PCA,
+    and saves the embeddings to a JSON file.
+
+    Args:
+        url: Base URL for the Pokemon Showdown data files.
+        file: Filename to download (e.g., "abilities.js").
+        extras: Additional entries to include with their descriptions.
+    """
     response = requests.get(f"{url}/{file}")
     if ".json" in file:
         json_text = response.text

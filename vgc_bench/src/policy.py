@@ -1,3 +1,11 @@
+"""
+Neural network policy module for VGC-Bench.
+
+Implements the actor-critic policy architecture with attention-based feature
+extraction for Pokemon VGC battles. Uses action masking to ensure only legal
+moves are selected.
+"""
+
 from typing import Any
 
 import torch
@@ -28,9 +36,32 @@ action_map = (
 
 
 class MaskedActorCriticPolicy(ActorCriticPolicy):
+    """
+    Actor-critic policy with action masking for Pokemon VGC.
+
+    Extends SB3's ActorCriticPolicy with action masking to enforce legal
+    moves and uses an attention-based feature extractor for processing
+    Pokemon battle observations.
+
+    Attributes:
+        num_frames: Number of stacked frames for temporal context.
+        chooses_on_teampreview: Whether policy controls teampreview decisions.
+        actor_grad: Whether to compute gradients for actor during evaluation.
+        debug: Whether to print debug information during forward pass.
+    """
+
     def __init__(
         self, *args: Any, num_frames: int, chooses_on_teampreview: bool, **kwargs: Any
     ):
+        """
+        Initialize the masked actor-critic policy.
+
+        Args:
+            num_frames: Number of frames to stack for temporal context.
+            chooses_on_teampreview: Whether policy controls teampreview.
+            *args: Additional arguments for ActorCriticPolicy.
+            **kwargs: Additional keyword arguments for ActorCriticPolicy.
+        """
         self.num_frames = num_frames
         self.chooses_on_teampreview = chooses_on_teampreview
         self.actor_grad = True
@@ -51,6 +82,16 @@ class MaskedActorCriticPolicy(ActorCriticPolicy):
     def forward(
         self, obs: torch.Tensor, deterministic: bool = False
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Compute actions, values, and log probabilities from observations.
+
+        Args:
+            obs: Batch of observations.
+            deterministic: If True, select the most likely action.
+
+        Returns:
+            Tuple of (actions, values, log_probs).
+        """
         action_logits, value_logits = self.get_logits(obs, actor_grad=True)
         distribution = self.get_dist_from_logits(obs, action_logits)
         actions = distribution.get_actions(deterministic=deterministic)
@@ -85,6 +126,7 @@ class MaskedActorCriticPolicy(ActorCriticPolicy):
     def evaluate_actions(
         self, obs: PyTorchObs, actions: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor | None]:
+        """Evaluate given actions and return values, log probs, and entropy."""
         assert isinstance(obs, torch.Tensor)
         action_logits, value_logits = self.get_logits(obs, self.actor_grad)
         distribution = self.get_dist_from_logits(obs, action_logits)
@@ -97,6 +139,7 @@ class MaskedActorCriticPolicy(ActorCriticPolicy):
     def get_logits(
         self, obs: torch.Tensor, actor_grad: bool
     ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Extract features and compute action/value logits."""
         actor_context = torch.enable_grad() if actor_grad else torch.no_grad()
         features = self.extract_features(obs)
         if self.share_features_extractor:
@@ -117,6 +160,7 @@ class MaskedActorCriticPolicy(ActorCriticPolicy):
         action_logits: torch.Tensor,
         action: torch.Tensor | None = None,
     ) -> MultiCategoricalDistribution:
+        """Create masked action distribution from logits."""
         batch_size = obs.size(0)
         mask = obs.view(batch_size, self.num_frames, -1)
         mask = mask[:, -1, : 2 * act_len]
@@ -129,6 +173,19 @@ class MaskedActorCriticPolicy(ActorCriticPolicy):
 
     @staticmethod
     def _update_mask(mask: torch.Tensor, ally_actions: torch.Tensor) -> torch.Tensor:
+        """
+        Update action mask based on ally's already-chosen action.
+
+        Prevents illegal combinations like both Pokemon switching to the same
+        slot, both passing when not forced, or both terastallizing.
+
+        Args:
+            mask: Current action mask tensor of shape (batch, 2*act_len).
+            ally_actions: Ally's chosen actions of shape (batch, 1).
+
+        Returns:
+            Updated mask tensor with illegal actions disabled.
+        """
         indices = (
             torch.arange(act_len, device=ally_actions.device)
             .unsqueeze(0)
@@ -149,6 +206,20 @@ class MaskedActorCriticPolicy(ActorCriticPolicy):
 
 
 class AttentionExtractor(BaseFeaturesExtractor):
+    """
+    Attention-based feature extractor for Pokemon battle observations.
+
+    Processes Pokemon observations using embeddings for abilities, items, and
+    moves, then applies transformer attention to produce a fixed-size feature
+    vector. Supports optional temporal frame stacking with causal attention.
+
+    Class Attributes:
+        embed_len: Dimension of embedding vectors for abilities/items/moves.
+        proj_len: Dimension of projected Pokemon tokens and output features.
+        num_heads: Number of attention heads in transformer layers.
+        embed_layers: Number of transformer encoder layers.
+    """
+
     embed_len: int = 32
     proj_len: int = 256
     num_heads: int = 4
@@ -160,6 +231,14 @@ class AttentionExtractor(BaseFeaturesExtractor):
         num_frames: int,
         chooses_on_teampreview: bool,
     ):
+        """
+        Initialize the attention-based feature extractor.
+
+        Args:
+            observation_space: Gymnasium observation space specification.
+            num_frames: Number of stacked frames for temporal context.
+            chooses_on_teampreview: Whether policy controls teampreview decisions.
+        """
         super().__init__(observation_space, features_dim=self.proj_len)
         self.num_frames = num_frames
         self.chooses_on_teampreview = chooses_on_teampreview
@@ -210,6 +289,20 @@ class AttentionExtractor(BaseFeaturesExtractor):
             )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Extract features from battle observation tensor.
+
+        Embeds Pokemon attributes, applies transformer attention across all 12
+        Pokemon (6 per side), and optionally applies temporal attention across
+        stacked frames.
+
+        Args:
+            x: Observation tensor of shape (batch, obs_dim) or
+               (batch, num_frames * obs_dim) if frame stacking.
+
+        Returns:
+            Feature tensor of shape (batch, proj_len).
+        """
         batch_size = x.size(0)
         x = x.view(batch_size, self.num_frames, -1)
         x = x[:, :, 2 * act_len :]

@@ -1,3 +1,10 @@
+"""
+Training callback module for VGC-Bench.
+
+Provides a custom Stable-Baselines3 callback for periodic evaluation,
+checkpointing, and opponent sampling during reinforcement learning training.
+"""
+
 import asyncio
 import json
 import os
@@ -19,6 +26,23 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 
 class Callback(BaseCallback):
+    """
+    Training callback for PPO-based Pokemon VGC training.
+
+    Handles periodic evaluation against SimpleHeuristics, checkpoint saving,
+    and opponent sampling for self-play variants. For double oracle training,
+    maintains a payoff matrix and computes Nash equilibrium distributions.
+
+    Attributes:
+        num_teams: Number of teams used in training.
+        learning_style: Training paradigm being used.
+        behavior_clone: Whether training was initialized from BC.
+        save_interval: Timesteps between checkpoint saves.
+        eval_agent: Agent used for evaluation battles.
+        payoff_matrix: Win rate matrix for double oracle (if applicable).
+        prob_dist: Nash equilibrium opponent sampling distribution.
+    """
+
     def __init__(
         self,
         run_id: int,
@@ -34,6 +58,23 @@ class Callback(BaseCallback):
         chooses_on_teampreview: bool,
         save_interval: int,
     ):
+        """
+        Initialize the training callback.
+
+        Args:
+            run_id: Training run identifier.
+            num_teams: Number of teams to use.
+            battle_format: Pokemon Showdown battle format string.
+            num_eval_workers: Number of parallel evaluation workers.
+            log_level: Logging verbosity for Showdown clients.
+            port: Port for the Pokemon Showdown server.
+            learning_style: Training paradigm (self-play, fictitious play, etc.).
+            behavior_clone: Whether initialized from behavior cloning.
+            num_frames: Number of frames for frame stacking.
+            allow_mirror_match: Whether to allow same-team matchups.
+            chooses_on_teampreview: Whether policy makes teampreview decisions.
+            save_interval: Timesteps between checkpoint saves.
+        """
         super().__init__()
         self.num_teams = num_teams
         self.learning_style = learning_style
@@ -106,9 +147,11 @@ class Callback(BaseCallback):
         )
 
     def _on_step(self) -> bool:
+        """Called after each environment step. Returns True to continue training."""
         return True
 
     def _on_training_start(self):
+        """Initialize evaluation agent and perform initial checkpoint if needed."""
         assert self.model.env is not None
         self.eval_agent.policy = self.model.policy
         self.starting_timestep = self.model.num_timesteps
@@ -135,6 +178,7 @@ class Callback(BaseCallback):
                 )
 
     def _on_rollout_start(self):
+        """Sample opponents for self-play and record checkpoints at intervals."""
         assert self.model.env is not None
         if (
             self.model.num_timesteps % self.save_interval == 0
@@ -164,10 +208,12 @@ class Callback(BaseCallback):
                 )
 
     def _on_training_end(self):
+        """Record final checkpoint and flush logs."""
         self.record()
         self.model.logger.dump(self.model.num_timesteps)
 
     def record(self):
+        """Evaluate current policy, update payoff matrix for DO, and save checkpoint."""
         win_rate = self.compare(self.eval_agent, self.eval_opponent, 1000)
         self.model.logger.record("train/eval", win_rate)
         if self.learning_style == LearningStyle.DOUBLE_ORACLE:
@@ -199,6 +245,17 @@ class Callback(BaseCallback):
 
     @staticmethod
     def compare(player1: Player, player2: Player, n_battles: int) -> float:
+        """
+        Run battles between two players and return player1's win rate.
+
+        Args:
+            player1: First player (whose win rate is returned).
+            player2: Second player.
+            n_battles: Number of battles to run.
+
+        Returns:
+            Win rate of player1 as a float between 0 and 1.
+        """
         asyncio.run(player1.battle_against(player2, n_battles=n_battles))
         win_rate = player1.win_rate
         player1.reset_battles()

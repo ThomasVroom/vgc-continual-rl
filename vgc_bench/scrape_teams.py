@@ -1,3 +1,11 @@
+"""
+Team scraping module for VGC-Bench.
+
+Scrapes competitive VGC team data from the VGCPastes Google Sheets database.
+Downloads team compositions from in-person tournament results and saves them
+as Pokepaste-format text files organized by regulation and event.
+"""
+
 import argparse
 import csv
 import os
@@ -16,6 +24,15 @@ SHEET_GVIZ_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq"
 
 
 def slugify(text: str) -> str:
+    """
+    Convert text to a URL/filename-safe slug.
+
+    Args:
+        text: Input text to slugify.
+
+    Returns:
+        Lowercase ASCII string with non-alphanumeric chars replaced by underscores.
+    """
     text = unicodedata.normalize("NFKD", text)
     text = text.encode("ascii", "ignore").decode("ascii")
     text = text.lower()
@@ -24,6 +41,15 @@ def slugify(text: str) -> str:
 
 
 def normalize_event_name(event_name: str) -> str:
+    """
+    Normalize an event name by removing common suffixes.
+
+    Args:
+        event_name: Raw event name string.
+
+    Returns:
+        Cleaned event name with "Regional Championships" etc. removed.
+    """
     name = event_name.strip()
     name = re.sub(r"\bregional\s+championships?\b", "", name, flags=re.IGNORECASE)
     name = re.sub(r"\bregionals?\b", "", name, flags=re.IGNORECASE)
@@ -31,6 +57,15 @@ def normalize_event_name(event_name: str) -> str:
 
 
 def placement_to_filename(placement: str) -> str:
+    """
+    Convert a tournament placement to a filename-friendly string.
+
+    Args:
+        placement: Raw placement string (e.g., "Champion", "Runner-up").
+
+    Returns:
+        Normalized filename (e.g., "1st", "2nd").
+    """
     normalized = slugify(placement.strip())
     if normalized in {"champion", "winner"}:
         return "1st"
@@ -40,6 +75,15 @@ def placement_to_filename(placement: str) -> str:
 
 
 def parse_event_date(date_str: str) -> datetime | None:
+    """
+    Parse a date string from various formats.
+
+    Args:
+        date_str: Date string in various formats (e.g., "15 Jan 2024").
+
+    Returns:
+        Parsed datetime object, or None if parsing fails.
+    """
     date_str = date_str.strip().replace("Sept", "Sep")
     if not date_str:
         return None
@@ -58,6 +102,16 @@ def parse_event_date(date_str: str) -> datetime | None:
 
 
 def event_dir_name(event_name: str, date_str: str) -> str:
+    """
+    Generate a directory name for an event.
+
+    Args:
+        event_name: Name of the tournament event.
+        date_str: Date string for the event.
+
+    Returns:
+        Slugified directory name including month and year if date available.
+    """
     dt = parse_event_date(date_str)
     if dt is None:
         return slugify(normalize_event_name(event_name))
@@ -70,6 +124,16 @@ def event_dir_name(event_name: str, date_str: str) -> str:
 
 
 def event_key(event_name: str, date_str: str) -> str:
+    """
+    Generate a unique key for an event (used for deduplication).
+
+    Args:
+        event_name: Name of the tournament event.
+        date_str: Date string for the event.
+
+    Returns:
+        Slugified key string including year if date available.
+    """
     dt = parse_event_date(date_str)
     if dt is None:
         return slugify(normalize_event_name(event_name)) or slugify(event_name)
@@ -83,6 +147,16 @@ def event_key(event_name: str, date_str: str) -> str:
 def fetch_sheet_names(
     session: requests.Session, max_bytes: int = 2_000_000
 ) -> list[str]:
+    """
+    Fetch the list of sheet names from the VGCPastes spreadsheet.
+
+    Args:
+        session: Requests session for HTTP calls.
+        max_bytes: Maximum bytes to download from the sheet HTML.
+
+    Returns:
+        List of unique sheet names in the spreadsheet.
+    """
     headers = {"Range": f"bytes=0-{max_bytes}"}
     resp = session.get(SHEET_EDIT_URL, headers=headers, stream=True, timeout=30)
     resp.raise_for_status()
@@ -114,6 +188,16 @@ def fetch_sheet_names(
 def featured_team_sheets_for_regulation(
     all_sheet_names: list[str], regulation: str
 ) -> list[str]:
+    """
+    Find sheet names containing featured teams for a specific regulation.
+
+    Args:
+        all_sheet_names: List of all sheet names in the spreadsheet.
+        regulation: Regulation letter (e.g., "G").
+
+    Returns:
+        List of matching sheet names for featured teams.
+    """
     reg = regulation.strip().lower()
     sheets = []
     for name in all_sheet_names:
@@ -130,6 +214,16 @@ def featured_team_sheets_for_regulation(
 
 
 def fetch_sheet_csv_rows(session: requests.Session, sheet_name: str) -> list[list[str]]:
+    """
+    Fetch and parse a sheet's data as CSV rows.
+
+    Args:
+        session: Requests session for HTTP calls.
+        sheet_name: Name of the sheet to fetch.
+
+    Returns:
+        List of rows, where each row is a list of cell values.
+    """
     url = f"{SHEET_GVIZ_URL}?tqx=out:csv&sheet={quote_plus(sheet_name)}"
     resp = session.get(url, timeout=60)
     resp.raise_for_status()
@@ -137,6 +231,16 @@ def fetch_sheet_csv_rows(session: requests.Session, sheet_name: str) -> list[lis
 
 
 def fetch_pokepaste_raw(session: requests.Session, pokepaste_url: str) -> str:
+    """
+    Fetch raw team text from a Pokepaste URL.
+
+    Args:
+        session: Requests session for HTTP calls.
+        pokepaste_url: URL to a pokepast.es page.
+
+    Returns:
+        Normalized team text in Showdown format.
+    """
     paste_id = pokepaste_url.rstrip("/").split("/")[-1]
     raw_url = f"https://pokepast.es/{paste_id}/raw"
     resp = session.get(raw_url, timeout=30)
@@ -145,6 +249,15 @@ def fetch_pokepaste_raw(session: requests.Session, pokepaste_url: str) -> str:
 
 
 def has_banned_move_or_ability(team_text: str) -> bool:
+    """
+    Check if a team contains abilities that would break log parsing.
+
+    Args:
+        team_text: Team text in Showdown format.
+
+    Returns:
+        True if team has Illusion or Commander ability.
+    """
     if re.search(
         r"^\s*Ability:\s*Illusion\s*$", team_text, flags=re.IGNORECASE | re.MULTILINE
     ):
@@ -157,6 +270,18 @@ def has_banned_move_or_ability(team_text: str) -> bool:
 
 
 def normalize_team_text(team_text: str) -> str:
+    """
+    Normalize team text formatting and fix known issues.
+
+    Handles "As One" ability disambiguation for Calyrex forms and
+    cleans up whitespace formatting.
+
+    Args:
+        team_text: Raw team text from Pokepaste.
+
+    Returns:
+        Normalized team text.
+    """
     lines = [line.rstrip() for line in team_text.splitlines()]
     while lines and lines[0] == "":
         lines.pop(0)
@@ -195,6 +320,15 @@ def normalize_team_text(team_text: str) -> str:
 
 
 def scrape_regulation(regulation: str) -> None:
+    """
+    Scrape all featured teams for a specific VGC regulation.
+
+    Downloads teams from in-person events, filters duplicates and banned
+    abilities, and saves them organized by event subdirectories.
+
+    Args:
+        regulation: Single letter regulation code (e.g., "G").
+    """
     reg_dir = Path("data") / "teams" / f"reg{regulation.lower()}"
     reg_dir.mkdir(parents=True, exist_ok=True)
     session = requests.Session()
@@ -268,6 +402,7 @@ def scrape_regulation(regulation: str) -> None:
 
 
 def main():
+    """Main entry point for the team scraping command-line tool."""
     parser = argparse.ArgumentParser(
         description="Scrape VGCPastes Featured Teams into data/teams/ subdirectories"
     )

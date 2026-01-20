@@ -1,3 +1,11 @@
+"""
+Pretraining module for VGC-Bench.
+
+Implements behavior cloning (BC) pretraining using trajectory data extracted
+from human battle logs. The pretrained policy can then be fine-tuned using
+reinforcement learning.
+"""
+
 import argparse
 import os
 import pickle
@@ -20,7 +28,24 @@ from torch.utils.data import DataLoader, Dataset
 
 
 class TrajectoryDataset(Dataset):
+    """
+    PyTorch Dataset for loading trajectory data from pickle files.
+
+    Loads pre-extracted trajectories from data/trajs/ and optionally applies
+    frame stacking for temporal context.
+
+    Attributes:
+        num_frames: Number of frames to stack for temporal context.
+        files: List of trajectory file paths.
+    """
+
     def __init__(self, num_frames: int):
+        """
+        Initialize the dataset by discovering trajectory files.
+
+        Args:
+            num_frames: Number of frames to stack (1 = no stacking).
+        """
         self.num_frames = num_frames
         directory = "data/trajs"
         self.files = [
@@ -30,9 +55,19 @@ class TrajectoryDataset(Dataset):
         ]
 
     def __len__(self):
+        """Return the number of trajectories in the dataset."""
         return len(self.files)
 
     def __getitem__(self, idx):
+        """
+        Load and return a trajectory by index.
+
+        Args:
+            idx: Index of the trajectory to load.
+
+        Returns:
+            Trajectory object, optionally with frame-stacked observations.
+        """
         file_path = self.files[idx]
         with open(file_path, "rb") as f:
             traj = pickle.load(f)
@@ -41,6 +76,15 @@ class TrajectoryDataset(Dataset):
         return traj
 
     def _frame_stack_traj(self, traj: Trajectory) -> Trajectory:
+        """
+        Apply frame stacking to a trajectory's observations.
+
+        Args:
+            traj: The original trajectory.
+
+        Returns:
+            New trajectory with frame-stacked observations.
+        """
         obs = np.array(traj.obs)
         traj_len, *obs_shape = obs.shape
         stacked_obs = np.empty((traj_len, self.num_frames, *obs_shape), dtype=obs.dtype)
@@ -64,6 +108,21 @@ def pretrain(
     num_frames: int,
     div_frac: float,
 ):
+    """
+    Pretrain a policy using behavior cloning on human gameplay data.
+
+    Trains a neural network policy to imitate human players using trajectory
+    data, periodically evaluating against a SimpleHeuristics opponent.
+
+    Args:
+        battle_format: Pokemon Showdown battle format string.
+        run_id: Training run identifier for saving checkpoints.
+        num_teams: Number of teams to use for evaluation.
+        port: Port for the Pokemon Showdown server.
+        device: CUDA device for training.
+        num_frames: Number of frames to stack for temporal context.
+        div_frac: Fraction of dataset to load per training iteration.
+    """
     env = ShowdownEnv(
         learning_style=LearningStyle.PURE_SELF_PLAY,
         chooses_on_teampreview=True,

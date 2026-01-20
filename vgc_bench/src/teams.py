@@ -1,3 +1,10 @@
+"""
+Team management module for VGC-Bench.
+
+Provides team building utilities including random team selection, team toggling
+to prevent mirror matches, and team similarity scoring for analysis.
+"""
+
 import random
 from functools import cache
 from pathlib import Path
@@ -6,12 +13,34 @@ from poke_env.teambuilder import Teambuilder, TeambuilderPokemon
 
 
 class TeamToggle:
+    """
+    Alternating team selector to prevent mirror matches.
+
+    Ensures consecutive team selections are always different, which is useful
+    in self-play training to prevent agents from facing identical teams.
+
+    Attributes:
+        num_teams: Total number of teams available for selection.
+    """
+
     def __init__(self, num_teams: int):
+        """
+        Initialize the team toggle.
+
+        Args:
+            num_teams: Number of teams to toggle between (must be > 1).
+        """
         assert num_teams > 1
         self.num_teams = num_teams
         self._last_value = None
 
     def next(self) -> int:
+        """
+        Get the next team index, guaranteed different from the previous call.
+
+        Returns:
+            Team index between 0 and num_teams-1.
+        """
         if self._last_value is None:
             self._last_value = random.choice(range(self.num_teams))
             return self._last_value
@@ -24,6 +53,18 @@ class TeamToggle:
 
 
 class RandomTeamBuilder(Teambuilder):
+    """
+    Team builder that randomly selects from a pool of pre-built teams.
+
+    Loads teams from the data directory based on the battle format and
+    provides random team selection for battles. Optionally uses TeamToggle
+    to prevent mirror matches.
+
+    Attributes:
+        teams: List of packed team strings ready for battle.
+        toggle: Optional TeamToggle for preventing mirror matches.
+    """
+
     teams: list[str]
 
     def __init__(
@@ -34,6 +75,16 @@ class RandomTeamBuilder(Teambuilder):
         toggle: TeamToggle | None = None,
         take_from_end: bool = False,
     ):
+        """
+        Initialize the random team builder.
+
+        Args:
+            run_id: Training run identifier for deterministic team selection.
+            num_teams: Number of teams to include in the pool.
+            battle_format: Pokemon Showdown format string (e.g., 'gen9vgc2024regh').
+            toggle: Optional TeamToggle to prevent consecutive identical teams.
+            take_from_end: If True, take teams from end of shuffled list.
+        """
         self.teams = []
         self.toggle = toggle
         paths = get_team_paths(battle_format)
@@ -44,6 +95,12 @@ class RandomTeamBuilder(Teambuilder):
             self.teams.append(packed_team)
 
     def yield_team(self) -> str:
+        """
+        Get a team for the next battle.
+
+        Returns:
+            Packed team string, either toggled or randomly selected.
+        """
         if self.toggle:
             return self.teams[self.toggle.next()]
         else:
@@ -103,6 +160,18 @@ def find_run_id(team_ids: set[int], battle_format: str) -> int:
 def get_team_ids(
     run_id: int, num_teams: int, battle_format: str, take_from_end: bool
 ) -> list[int]:
+    """
+    Get deterministically shuffled team indices for a given run.
+
+    Args:
+        run_id: Seed for deterministic shuffling.
+        num_teams: Number of team indices to return.
+        battle_format: Pokemon Showdown format string.
+        take_from_end: If True, take teams from end of shuffled list.
+
+    Returns:
+        List of team indices.
+    """
     paths = get_team_paths(battle_format)
     teams = list(range(len(paths)))
     random.Random(run_id).shuffle(teams)
@@ -111,5 +180,15 @@ def get_team_ids(
 
 @cache
 def get_team_paths(battle_format: str) -> list[Path]:
+    """
+    Get all team file paths for a given battle format.
+
+    Args:
+        battle_format: Pokemon Showdown format string (extracts last 4 chars
+            as regulation identifier, e.g., 'regh' from 'gen9vgc2024regh').
+
+    Returns:
+        List of Path objects pointing to team .txt files.
+    """
     reg_path = Path("data") / "teams" / battle_format[-4:]
     return list(reg_path.rglob("*.txt"))

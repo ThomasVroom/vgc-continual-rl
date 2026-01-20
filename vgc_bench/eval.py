@@ -1,3 +1,11 @@
+"""
+Evaluation module for VGC-Bench.
+
+Provides functions for cross-evaluating trained agents against each other and
+baseline players, computing payoff matrices, and analyzing team statistics
+using Alpha-Rank for meta-game analysis.
+"""
+
 import argparse
 import asyncio
 import os
@@ -25,6 +33,21 @@ def cross_eval_all_agents(
     num_battles: int,
     num_llm_battles: int,
 ):
+    """
+    Run cross-evaluation of all agent types and compute average payoff matrix.
+
+    Evaluates Random, MaxBasePower, SimpleHeuristics, LLM, and various RL-trained
+    agents (SP, FP, DO, BC variants) against each other across multiple runs,
+    then uses Alpha-Rank to analyze the meta-game.
+
+    Args:
+        battle_format: Pokemon Showdown battle format string.
+        num_teams: Number of teams to use in evaluation.
+        port: Port for the Pokemon Showdown server.
+        device: CUDA device for model inference.
+        num_battles: Total number of battles for non-LLM matchups.
+        num_llm_battles: Total number of battles involving the LLM player.
+    """
     num_runs = 5
     avg_payoff_matrix = np.zeros((11, 11))
     labels = ["R", "MBP", "SH", "LLM", "SP", "FP", "DO", "BC", "BCSP", "BCFP", "BCDO"]
@@ -132,6 +155,26 @@ async def get_best_checkpoints(
     eval_pool_size: int = 50,
     cutoff: int = 5,
 ) -> dict[str, int]:
+    """
+    Find the best checkpoint for each training method based on evaluation performance.
+
+    For each method, selects checkpoints with top-10% evaluation scores from TensorBoard
+    logs, then battles them against a random pool of other checkpoints to determine
+    which performs best in head-to-head matchups.
+
+    Args:
+        battle_format: Pokemon Showdown battle format string.
+        run_id: Training run identifier.
+        num_teams: Number of teams used during training.
+        port: Port for the Pokemon Showdown server.
+        device: CUDA device for model inference.
+        num_battles: Number of battles to run for each checkpoint evaluation.
+        eval_pool_size: Size of the random opponent pool for evaluation.
+        cutoff: Number of initial checkpoints to skip.
+
+    Returns:
+        Dictionary mapping method names to their best checkpoint timesteps.
+    """
     best_checkpoints = {}
     save_policy = BatchPolicyPlayer(
         server_configuration=ServerConfiguration(
@@ -231,6 +274,22 @@ def cross_eval_over_team_sizes(
     num_battles: int,
     is_performance_test: bool,
 ):
+    """
+    Cross-evaluate agents trained with different team counts.
+
+    Tests whether agents trained with more teams perform better (performance test)
+    or generalize better to unseen teams (generalization test).
+
+    Args:
+        battle_format: Pokemon Showdown battle format string.
+        team_counts: List of team counts corresponding to each method.
+        methods: List of (method_name, checkpoint_list) tuples for each team count.
+        port: Port for the Pokemon Showdown server.
+        device: CUDA device for model inference.
+        num_battles: Total number of battles across all runs.
+        is_performance_test: If True, tests on minimum team count; if False,
+            tests generalization on maximum team count (out-of-distribution).
+    """
     # if is_performance_test is False, then this becomes the generalization test
     num_runs = 5
     avg_payoff_matrix = np.zeros((4, 4))
@@ -283,6 +342,17 @@ def cross_eval_over_team_sizes(
 
 
 def print_team_statistics(battle_format: str, num_teams: int):
+    """
+    Print similarity statistics between teams in the dataset.
+
+    Computes and displays worst-case similarity scores between each team and
+    its most similar neighbor, both globally and for out-of-distribution teams
+    relative to the in-distribution training set for each run.
+
+    Args:
+        battle_format: Pokemon Showdown battle format string.
+        num_teams: Number of teams in the in-distribution training set.
+    """
     num_runs = 5
     all_teams = [path.read_text() for path in get_team_paths(battle_format)]
     sim_scores = [
