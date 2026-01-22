@@ -191,4 +191,4 @@ def get_team_paths(battle_format: str) -> list[Path]:
         List of Path objects pointing to team .txt files.
     """
     reg_path = Path("data") / "teams" / battle_format[-4:]
-    return list(reg_path.rglob("*.txt"))
+    return sorted(reg_path.rglob("*.txt"))
