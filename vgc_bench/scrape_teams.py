@@ -391,6 +391,8 @@ def scrape_regulation(regulation: str) -> None:
             date_str = row[date_idx].strip()
             placement = row[rank_idx].strip()
             placement_slug = slugify(placement)
+            if "juniors" in placement_slug or "seniors" in placement_slug:
+                continue
             if placement_slug not in {"champion", "winner", "runner_up"}:
                 match = re.search(r"(\d+)", placement_slug)
                 if not match or int(match.group(1)) > 64:
