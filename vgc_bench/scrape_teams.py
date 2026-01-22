@@ -382,6 +382,8 @@ def scrape_regulation(regulation: str) -> None:
                 continue
             seen_teams.append(team_text)
             event_name = row[event_idx].strip()
+            if "seniors" in event_name.lower() or "juniors" in event_name.lower():
+                continue
             date_str = row[date_idx].strip()
             placement = row[rank_idx].strip()
             key = event_key(event_name, date_str)
