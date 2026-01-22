@@ -382,7 +382,11 @@ def scrape_regulation(regulation: str) -> None:
                 continue
             seen_teams.append(team_text)
             event_name = row[event_idx].strip()
-            if "seniors" in event_name.lower() or "juniors" in event_name.lower():
+            event_lower = event_name.lower()
+            allowed_events = ("regional", "euic", "laic", "naic", "worlds")
+            if not any(kw in event_lower for kw in allowed_events):
+                continue
+            if "seniors" in event_lower or "juniors" in event_lower:
                 continue
             date_str = row[date_idx].strip()
             placement = row[rank_idx].strip()
