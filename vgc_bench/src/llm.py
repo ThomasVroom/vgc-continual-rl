@@ -488,14 +488,11 @@ Respond with the number corresponding to your choice. PLEASE GIVE NO FURTHER RES
         elif not pokemon.active:
             return LLMPlayer.explain_inactive_pokemon(pokemon)
         else:
-            return (
-                LLMPlayer.explain_inactive_pokemon(pokemon)
-                + f"""
+            return LLMPlayer.explain_inactive_pokemon(pokemon) + f"""
 {LLMPlayer.explain_boosts(pokemon.boosts)}
 Effects: {", ".join([f"{e.name.lower()} (active for {counter} turns)" for e, counter in pokemon.effects.items()]) or "None"}
 Is in first active turn (effects moves like fake out): {pokemon.first_turn}
 Number of turns user has protected in a row: {pokemon.protect_counter}"""
-            )
 
     @staticmethod
     def explain_inactive_pokemon(pokemon: Pokemon) -> str:
