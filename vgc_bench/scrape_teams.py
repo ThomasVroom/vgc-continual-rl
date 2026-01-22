@@ -390,6 +390,11 @@ def scrape_regulation(regulation: str) -> None:
                 continue
             date_str = row[date_idx].strip()
             placement = row[rank_idx].strip()
+            placement_slug = slugify(placement)
+            if placement_slug not in {"champion", "winner", "runner_up"}:
+                match = re.search(r"(\d+)", placement_slug)
+                if not match or int(match.group(1)) > 64:
+                    continue
             key = event_key(event_name, date_str)
             if key not in event_subdirs:
                 event_subdirs[key] = reg_dir / event_dir_name(event_name, date_str)
