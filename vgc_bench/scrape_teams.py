@@ -338,6 +338,7 @@ def scrape_regulation(regulation: str) -> None:
     saved = 0
     skipped_duplicates = 0
     skipped_banned = 0
+    skipped_existing = 0
     event_subdirs: dict[str, Path] = {}
     for sheet_name in sheet_names:
         rows = fetch_sheet_csv_rows(session, sheet_name)
@@ -405,15 +406,14 @@ def scrape_regulation(regulation: str) -> None:
             base_filename = placement_to_filename(placement)
             filename = f"{base_filename}.txt"
             out_path = event_subdir / filename
-            suffix = 2
-            while out_path.exists():
-                filename = f"{base_filename}_{suffix}.txt"
-                out_path = event_subdir / filename
-                suffix += 1
+            if out_path.exists():
+                skipped_existing += 1
+                continue
             with open(out_path, "w") as f:
                 f.write(team_text)
             saved += 1
     print(f"Saved {saved} teams to {reg_dir}")
+    print(f"Skipped {skipped_existing} already existing files")
     print(f"Skipped {skipped_banned} teams with Illusion/Commander")
     print(f"Skipped {skipped_duplicates} duplicate teams")
 
