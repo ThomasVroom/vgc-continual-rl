@@ -111,17 +111,16 @@ def event_dir_name(event_name: str, date_str: str) -> str:
         date_str: Date string for the event.
 
     Returns:
-        Slugified directory name including month and year if date available.
+        Slugified directory name including year if date available.
     """
     dt = parse_event_date(date_str)
     if dt is None:
         return slugify(normalize_event_name(event_name))
-    month = dt.strftime("%B").lower()
     normalized_name = re.sub(r"\b\d{4}\b", "", normalize_event_name(event_name)).strip()
     base = (
         slugify(normalized_name) or slugify(normalize_event_name(event_name)) or "event"
     )
-    return f"{base}_{month}_{dt.year}"
+    return f"{base}_{dt.year}"
 
 
 def event_key(event_name: str, date_str: str) -> str:
