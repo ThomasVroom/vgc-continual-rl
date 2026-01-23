@@ -404,6 +404,8 @@ def scrape_regulation(regulation: str) -> None:
             event_subdir = event_subdirs[key]
             event_subdir.mkdir(parents=True, exist_ok=True)
             base_filename = placement_to_filename(placement)
+            if not base_filename[0].isdigit():
+                continue
             filename = f"{base_filename}.txt"
             out_path = event_subdir / filename
             if out_path.exists():
