@@ -400,7 +400,7 @@ def main(num_workers: int, min_rating: int | None, only_winner: bool, strict: bo
     executor = ProcessPoolExecutor(
         max_workers=num_workers, initializer=_init_worker_loop
     )
-    os.makedirs("data/trajs", exist_ok=True)
+    os.makedirs("trajs", exist_ok=True)
     total = 0
     for f in all_formats:
         with open(f"battle-logs/logs-{f}.json", "r") as file:
@@ -408,7 +408,7 @@ def main(num_workers: int, min_rating: int | None, only_winner: bool, strict: bo
         print(f"processing {len(logs)} {f} logs...")
         trajs = process_logs(logs, executor, min_rating, only_winner, strict)
         for i, traj in enumerate(trajs, start=total):
-            with open(f"data/trajs/{i:08d}.pkl", "wb") as f:
+            with open(f"trajs/{i:08d}.pkl", "wb") as f:
                 pickle.dump(traj, f)
         total += len(trajs)
 

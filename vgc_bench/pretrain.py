@@ -47,7 +47,7 @@ class TrajectoryDataset(Dataset):
             num_frames: Number of frames to stack (1 = no stacking).
         """
         self.num_frames = num_frames
-        directory = "data/trajs"
+        directory = "trajs"
         self.files = [
             os.path.join(directory, file)
             for file in os.listdir(directory)
