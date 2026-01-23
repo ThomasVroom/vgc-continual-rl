@@ -1,73 +1,68 @@
-Pelipper (M) @ Focus Sash
-Ability: Drizzle
-Level: 50
-Shiny: Yes
-Tera Type: Stellar
-EVs: 4 HP / 252 SpA / 252 Spe
-Timid Nature
-IVs: 0 Atk
-- Weather Ball
-- Hurricane
-- Tailwind
-- Protect
-
-Archaludon (M) @ Assault Vest
-Ability: Stamina
-Level: 50
-Shiny: Yes
-Tera Type: Grass
-EVs: 212 HP / 4 Def / 4 SpA / 36 SpD / 252 Spe
-Timid Nature
-IVs: 0 Atk
-- Draco Meteor
-- Snarl
-- Electro Shot
-- Body Press
-
-Sinistcha-Masterpiece @ Sitrus Berry
-Ability: Hospitality
-Level: 50
-Shiny: Yes
-Tera Type: Fire
-EVs: 236 HP / 20 Def / 252 SpD
-Calm Nature
-IVs: 0 Atk / 0 Spe
-- Matcha Gotcha
-- Life Dew
-- Rage Powder
-- Trick Room
-
-Farigiraf @ Mental Herb
-Ability: Armor Tail
-Level: 50
-Tera Type: Poison
-EVs: 188 HP / 212 Def / 108 SpD
-Relaxed Nature
-IVs: 0 Atk / 0 Spe
-- Trick Room
-- Helping Hand
-- Dazzling Gleam
-- Psychic
-
-Ursaluna-Bloodmoon @ Life Orb
-Ability: Mind's Eye
-Level: 50
-Tera Type: Normal
-EVs: 164 HP / 252 SpA / 92 SpD
-Quiet Nature
-IVs: 16 Atk / 9 Spe
-- Blood Moon
-- Earth Power
-- Hyper Voice
-- Protect
-
-Incineroar @ Safety Goggles
-Ability: Intimidate
+Kommo-o @ Throat Spray
+Ability: Soundproof
 Level: 50
 Tera Type: Fire
-EVs: 204 HP / 4 Atk / 4 Def / 156 SpD / 140 Spe
-Careful Nature
-- Flare Blitz
-- Knock Off
-- Parting Shot
+EVs: 196 HP / 12 Def / 76 SpA / 4 SpD / 220 Spe
+Timid Nature
+IVs: 10 Atk
+- Clangorous Soul
+- Clanging Scales
+- Flamethrower
+- Protect
+
+Dondozo @ Leftovers
+Ability: Unaware
+Level: 50
+Tera Type: Flying
+EVs: 252 HP / 4 Def / 252 SpD
+Impish Nature
+- Wave Crash
+- Fissure
+- Yawn
+- Protect
+
+Rillaboom @ Assault Vest
+Ability: Grassy Surge
+Level: 50
+Tera Type: Fire
+EVs: 252 HP / 252 Atk / 4 SpD
+Adamant Nature
 - Fake Out
+- Wood Hammer
+- Grassy Glide
+- High Horsepower
+
+Sneasler @ Focus Sash
+Ability: Unburden
+Level: 50
+Tera Type: Stellar
+EVs: 4 HP / 252 Atk / 252 Spe
+Jolly Nature
+- Fake Out
+- Dire Claw
+- Close Combat
+- Protect
+
+Electabuzz @ Eviolite
+Ability: Vital Spirit
+Level: 50
+Tera Type: Grass
+EVs: 220 HP / 124 Def / 4 SpA / 44 SpD / 116 Spe
+Timid Nature
+IVs: 0 Atk
+- Electroweb
+- Follow Me
+- Helping Hand
+- Protect
+
+Gholdengo @ Choice Specs
+Ability: Good as Gold
+Level: 50
+Tera Type: Fairy
+EVs: 4 HP / 252 SpA / 252 Spe
+Modest Nature
+IVs: 0 Atk
+- Make It Rain
+- Shadow Ball
+- Dazzling Gleam
+- Power Gem

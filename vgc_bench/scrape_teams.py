@@ -111,16 +111,20 @@ def event_dir_name(event_name: str, date_str: str) -> str:
         date_str: Date string for the event.
 
     Returns:
-        Slugified directory name including year if date available.
+        Slugified directory name including year from event name, or date as fallback.
     """
-    dt = parse_event_date(date_str)
-    if dt is None:
-        return slugify(normalize_event_name(event_name))
     normalized_name = re.sub(r"\b\d{4}\b", "", normalize_event_name(event_name)).strip()
     base = (
         slugify(normalized_name) or slugify(normalize_event_name(event_name)) or "event"
     )
-    return f"{base}_{dt.year}"
+    # Prefer year from event name, fall back to date
+    year_match = re.search(r"\b(20\d{2})\b", event_name)
+    if year_match:
+        return f"{base}_{year_match.group(1)}"
+    dt = parse_event_date(date_str)
+    if dt:
+        return f"{base}_{dt.year}"
+    return base
 
 
 def event_key(event_name: str, date_str: str) -> str:
@@ -132,16 +136,20 @@ def event_key(event_name: str, date_str: str) -> str:
         date_str: Date string for the event.
 
     Returns:
-        Slugified key string including year if date available.
+        Slugified key string including year from event name, or date as fallback.
     """
-    dt = parse_event_date(date_str)
-    if dt is None:
-        return slugify(normalize_event_name(event_name)) or slugify(event_name)
     normalized_name = re.sub(r"\b\d{4}\b", "", normalize_event_name(event_name)).strip()
     base = (
         slugify(normalized_name) or slugify(normalize_event_name(event_name)) or "event"
     )
-    return f"{base}_{dt.year}"
+    # Prefer year from event name, fall back to date
+    year_match = re.search(r"\b(20\d{2})\b", event_name)
+    if year_match:
+        return f"{base}_{year_match.group(1)}"
+    dt = parse_event_date(date_str)
+    if dt:
+        return f"{base}_{dt.year}"
+    return base
 
 
 def fetch_sheet_names(
@@ -389,15 +397,12 @@ def scrape_regulation(regulation: str) -> None:
                 continue
             if "seniors" in event_lower or "juniors" in event_lower:
                 continue
+            if "&" in event_name:
+                continue
             date_str = row[date_idx].strip()
             placement = row[rank_idx].strip()
-            placement_slug = slugify(placement)
-            if "juniors" in placement_slug or "seniors" in placement_slug:
+            if "juniors" in placement or "seniors" in placement:
                 continue
-            if placement_slug not in {"champion", "winner", "runner_up"}:
-                match = re.search(r"(\d+)", placement_slug)
-                if not match or int(match.group(1)) > 64:
-                    continue
             key = event_key(event_name, date_str)
             if key not in event_subdirs:
                 event_subdirs[key] = reg_dir / event_dir_name(event_name, date_str)
