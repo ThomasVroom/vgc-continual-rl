@@ -81,7 +81,8 @@ def get_regulation_sheets(all_sheets: list[str], regulation: str) -> list[str]:
     """Find featured team sheets for a regulation."""
     reg = regulation.lower()
     sheets = [
-        name for name in all_sheets
+        name
+        for name in all_sheets
         if "featured" in name.lower()
         and "presentable" not in name.lower()
         and (f"reg {reg}" in name.lower() or f"regulation {reg}" in name.lower())
@@ -120,7 +121,11 @@ def normalize_team_text(text: str) -> str:
     normalized = []
     for block in blocks:
         header = block[0]
-        asone = "As One (Glastrier)" if "calyrex-ice" in header.lower() else "As One (Spectrier)"
+        asone = (
+            "As One (Glastrier)"
+            if "calyrex-ice" in header.lower()
+            else "As One (Spectrier)"
+        )
         new_lines = []
         for line in block:
             m = re.match(r"^(\s*Ability:\s*)(.*?)\s*$", line, re.IGNORECASE)
@@ -134,7 +139,9 @@ def normalize_team_text(text: str) -> str:
 def has_banned_ability(team_text: str) -> bool:
     """Check if team has Illusion or Commander ability."""
     return any(
-        re.search(rf"^\s*Ability:\s*{ability}\s*$", team_text, re.IGNORECASE | re.MULTILINE)
+        re.search(
+            rf"^\s*Ability:\s*{ability}\s*$", team_text, re.IGNORECASE | re.MULTILINE
+        )
         for ability in BANNED_ABILITIES
     )
 
@@ -162,7 +169,7 @@ def is_valid_placement(placement: str) -> bool:
 
 def scrape_regulation(regulation: str) -> None:
     """Scrape featured teams for a VGC regulation."""
-    reg_dir = Path("data/teams") / f"reg{regulation.lower()}"
+    reg_dir = Path("teams") / f"reg{regulation.lower()}"
     reg_dir.mkdir(parents=True, exist_ok=True)
     session = requests.Session()
     sheets = get_regulation_sheets(fetch_sheet_names(session), regulation)
@@ -172,13 +179,19 @@ def scrape_regulation(regulation: str) -> None:
     for sheet in sheets:
         rows = fetch_csv(session, sheet)
         header_idx = next(
-            i for i, r in enumerate(rows)
+            i
+            for i, r in enumerate(rows)
             if r and r[0].strip() == "Team ID" and "Pokepaste" in r
         )
         header = rows[header_idx]
-        col = {name: header.index(name) for name in ["Category", "EVs", "Pokepaste", "Tournament / Event", "Rank"]}
-        col["Date"] = header.index("Date") if "Date" in header else col["Tournament / Event"] - 1
-        for row in rows[header_idx + 1:]:
+        col = {
+            name: header.index(name)
+            for name in ["Category", "EVs", "Pokepaste", "Tournament / Event", "Rank"]
+        }
+        col["Date"] = (
+            header.index("Date") if "Date" in header else col["Tournament / Event"] - 1
+        )
+        for row in rows[header_idx + 1 :]:
             if len(row) <= max(col.values()):
                 continue
             # Filter by category and EVs
@@ -198,7 +211,10 @@ def scrape_regulation(regulation: str) -> None:
                 Teambuilder.parse_showdown_team(team_text)
             except KeyError:
                 continue
-            if any(calc_team_similarity_score(team_text, prev) == 1.0 for prev in seen_teams):
+            if any(
+                calc_team_similarity_score(team_text, prev) == 1.0
+                for prev in seen_teams
+            ):
                 stats["duplicates"] += 1
                 continue
             seen_teams.append(team_text)
@@ -222,7 +238,9 @@ def scrape_regulation(regulation: str) -> None:
             out_path.write_text(team_text)
             stats["saved"] += 1
     print(f"Saved {stats['saved']} teams to {reg_dir}")
-    print(f"Skipped {stats['existing']} existing, {stats['banned']} banned, {stats['duplicates']} duplicates")
+    print(
+        f"Skipped {stats['existing']} existing, {stats['banned']} banned, {stats['duplicates']} duplicates"
+    )
 
 
 def main():
@@ -232,7 +250,7 @@ def main():
     reg = args.reg.strip().upper()
     if len(reg) != 1 or not reg.isalpha():
         raise ValueError("--reg must be a single letter")
-    Path("data").mkdir(exist_ok=True)
+    Path("teams").mkdir(exist_ok=True)
     scrape_regulation(reg)
 
 

@@ -35,8 +35,8 @@ def scrape_logs(num_workers: int, increment: int, battle_format: str) -> bool:
     Returns:
         True if no new logs were found (scraping complete), False otherwise.
     """
-    if os.path.exists(f"data/logs-{battle_format}.json"):
-        with open(f"data/logs-{battle_format}.json", "r") as f:
+    if os.path.exists(f"battle-logs/logs-{battle_format}.json"):
+        with open(f"battle-logs/logs-{battle_format}.json", "r") as f:
             old_logs = json.load(f)
     else:
         old_logs = {}
@@ -68,7 +68,7 @@ def scrape_logs(num_workers: int, increment: int, battle_format: str) -> bool:
     }
     logs = {**old_logs, **new_logs}
     print(f"{battle_format}:", len(logs))
-    with open(f"data/logs-{battle_format}.json", "w") as f:
+    with open(f"battle-logs/logs-{battle_format}.json", "w") as f:
         json.dump(logs, f)
     return len(logs) == len(old_logs)
 
@@ -222,7 +222,7 @@ def main(num_workers: int, read_increment: int):
         done = False
         while not done:
             done = scrape_logs(num_workers, read_increment, fmt)
-        with open(f"data/logs-{fmt}.json", "r") as file:
+        with open(f"battle-logs/logs-{fmt}.json", "r") as file:
             log_dict = json.load(file)
             logs = [log for _, log in log_dict.values()]
         players_in_range = lambda logs, low, high: len(

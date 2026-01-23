@@ -403,7 +403,7 @@ def main(num_workers: int, min_rating: int | None, only_winner: bool, strict: bo
     os.makedirs("data/trajs", exist_ok=True)
     total = 0
     for f in all_formats:
-        with open(f"data/logs-{f}.json", "r") as file:
+        with open(f"battle-logs/logs-{f}.json", "r") as file:
             logs = json.load(file)
         print(f"processing {len(logs)} {f} logs...")
         trajs = process_logs(logs, executor, min_rating, only_winner, strict)
