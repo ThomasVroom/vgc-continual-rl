@@ -57,6 +57,8 @@ class Callback(BaseCallback):
         allow_mirror_match: bool,
         chooses_on_teampreview: bool,
         save_interval: int,
+        team1: str | None,
+        team2: str | None,
     ):
         """
         Initialize the training callback.
@@ -74,6 +76,8 @@ class Callback(BaseCallback):
             allow_mirror_match: Whether to allow same-team matchups.
             chooses_on_teampreview: Whether policy makes teampreview decisions.
             save_interval: Timesteps between checkpoint saves.
+            team1: Optional team string for matchup solving (requires team2).
+            team2: Optional team string for matchup solving (requires team1).
         """
         super().__init__()
         self.num_teams = num_teams
@@ -119,7 +123,9 @@ class Callback(BaseCallback):
             max_concurrent_battles=num_eval_workers,
             accept_open_team_sheet=True,
             open_timeout=None,
-            team=RandomTeamBuilder(run_id, num_teams, battle_format, toggle),
+            team=RandomTeamBuilder(
+                run_id, num_teams, battle_format, team1, team2, toggle
+            ),
         )
         self.eval_agent2 = BatchPolicyPlayer(
             server_configuration=ServerConfiguration(
@@ -131,7 +137,9 @@ class Callback(BaseCallback):
             max_concurrent_battles=num_eval_workers,
             accept_open_team_sheet=True,
             open_timeout=None,
-            team=RandomTeamBuilder(run_id, num_teams, battle_format, toggle),
+            team=RandomTeamBuilder(
+                run_id, num_teams, battle_format, team1, team2, toggle
+            ),
         )
         self.eval_opponent = SimpleHeuristicsPlayer(
             server_configuration=ServerConfiguration(
@@ -143,7 +151,9 @@ class Callback(BaseCallback):
             max_concurrent_battles=num_eval_workers,
             accept_open_team_sheet=True,
             open_timeout=None,
-            team=RandomTeamBuilder(run_id, num_teams, battle_format, toggle),
+            team=RandomTeamBuilder(
+                run_id, num_teams, battle_format, team1, team2, toggle
+            ),
         )
 
     def _on_step(self) -> bool:

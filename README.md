@@ -48,12 +48,13 @@ The training code offers the following PSRO algorithms:
 - policy exploitation
 
 ...as well as some special training options:
-- initializing the policy with the output of the BC pipeline (requires manually copying the BC policy file into the training run's save folder)
+- initializing the policy with the output of the BC pipeline (requires manually copying the BC policy file into the training run's save folder); a pre-trained BC model is provided in [bc.zip](bc.zip) for users who want to skip pretraining
 - frame stacking with specified number of frames
 - excluding mirror matches (p1 and p2 using the same team)
 - starting agent with random teampreview at the beginning of each game
+- matchup solving with specific team strings (pass both `--team1` and `--team2` to train on a single matchup)
 
-See [train.sh](train.sh) for running multiple training runs simultaneously with automatic pokemon-showdown server management.
+See [train.sh](train.sh) for running multiple training runs simultaneously with automatic pokemon-showdown server management, or [solve_matchup.sh](solve_matchup.sh) for an example of training on a specific team matchup.
 
 ## 📚 Behavior Cloning
 
