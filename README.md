@@ -54,7 +54,7 @@ The training code offers the following PSRO algorithms:
 - starting agent with random teampreview at the beginning of each game
 - matchup solving with specific team strings (pass both `--team1` and `--team2` to train on a single matchup)
 
-See [train.sh](train.sh) for running multiple training runs simultaneously with automatic pokemon-showdown server management, or [solve_matchup.sh](solve_matchup.sh) for an example of training on a specific team matchup.
+See [train.sh](train.sh) for running multiple training runs simultaneously with automatic pokemon-showdown server management, or [learn_matchup.sh](learn_matchup.sh) for an example of training on a specific team matchup.
 
 ## 📚 Behavior Cloning
 
