@@ -5,150 +5,149 @@ port=8000
 num_env_workers=1
 num_eval_workers=1
 
-# sample (EUIC 2025 finals matchup, Wolfe Glick vs. Dyl Yeomans)
+# sample teams
+# finals matchup of World Championships 2024 in Honolulu
+# Luca Ceribelli vs. Yuta Ishigaki
 TEAM1="""
-Flutter Mane @ Focus Sash
-Ability: Protosynthesis
-Level: 50
-Tera Type: Normal
-EVs: 4 HP / 252 SpA / 252 Spe
-Timid Nature
-IVs: 0 Atk
-- Protect
-- Icy Wind
-- Moonblast
-- Shadow Ball
-
-Koraidon @ Life Orb
-Ability: Orichalcum Pulse
-Level: 50
-Tera Type: Fire
-EVs: 4 HP / 252 Atk / 252 Spe
-Jolly Nature
-- Protect
-- Flame Charge
-- Close Combat
-- Flare Blitz
-
-Amoonguss @ Mental Herb
-Ability: Regenerator
-Level: 50
-Tera Type: Dark
-EVs: 236 HP / 76 Def / 196 SpD
-Sassy Nature
-IVs: 0 Atk / 0 Spe
-- Protect
-- Rage Powder
-- Sludge Bomb
-- Spore
-
-Incineroar @ Safety Goggles
-Ability: Intimidate
-Level: 50
-Tera Type: Bug
-EVs: 252 HP / 124 Def / 132 SpD
-Careful Nature
-IVs: 29 Spe
-- Protect
-- Flare Blitz
-- Fake Out
-- Parting Shot
-
-Gothitelle @ Leftovers
-Ability: Shadow Tag
-Level: 50
-Tera Type: Water
-EVs: 252 HP / 196 Def / 4 SpA / 52 SpD / 4 Spe
-Bold Nature
-IVs: 0 Atk
-- Protect
-- Psychic
-- Fake Out
-- Taunt
-
-Scream Tail @ Booster Energy
-Ability: Protosynthesis
-Level: 50
-Tera Type: Dark
-EVs: 252 HP / 84 Def / 68 SpD / 100 Spe
-Timid Nature
-IVs: 0 Atk
-- Protect
-- Encore
-- Disable
-- Perish Song
-"""
-TEAM2="""
-megabeast:3 (Miraidon) @ Choice Specs
+Miraidon @ Choice Specs
 Ability: Hadron Engine
 Level: 50
 Tera Type: Fairy
-EVs: 172 HP / 4 Def / 124 SpA / 4 SpD / 204 Spe
+EVs: 44 HP / 4 Def / 244 SpA / 12 SpD / 204 Spe
 Modest Nature
 - Electro Drift
-- Volt Switch
 - Draco Meteor
+- Volt Switch
 - Dazzling Gleam
 
-hellofreak (Incineroar) (F) @ Rocky Helmet
-Ability: Intimidate
-Level: 50
-Tera Type: Ghost
-EVs: 252 HP / 140 Def / 116 SpD
-Careful Nature
-IVs: 11 Spe
-- Flare Blitz
-- Knock Off
-- U-turn
-- Fake Out
-
-radicalqueen (Urshifu) (F) @ Focus Sash
-Ability: Unseen Fist
+Whimsicott @ Covert Cloak
+Ability: Prankster
 Level: 50
 Tera Type: Dark
-EVs: 4 HP / 236 Atk / 20 Def / 4 SpD / 244 Spe
-Adamant Nature
-- Wicked Blow
-- Sucker Punch
-- Close Combat
-- Detect
+EVs: 236 HP / 164 SpD / 108 Spe
+Timid Nature
+IVs: 0 Atk
+- Moonblast
+- Tailwind
+- Light Screen
+- Encore
 
-partypirate (Iron Hands) @ Assault Vest
+Urshifu-Rapid-Strike @ Focus Sash
+Ability: Unseen Fist
+Level: 50
+Tera Type: Stellar
+EVs: 252 Atk / 4 SpD / 252 Spe
+Adamant Nature
+- Surging Strikes
+- Close Combat
+- Aqua Jet
+- Protect
+
+Ogerpon-Hearthflame (F) @ Hearthflame Mask
+Ability: Mold Breaker
+Level: 50
+Tera Type: Fire
+EVs: 188 HP / 76 Atk / 52 Def / 4 SpD / 188 Spe
+Adamant Nature
+- Ivy Cudgel
+- Wood Hammer
+- Follow Me
+- Spiky Shield
+
+Farigiraf @ Electric Seed
+Ability: Armor Tail
+Level: 50
+Tera Type: Water
+EVs: 204 HP / 164 Def / 4 SpA / 108 SpD / 28 Spe
+Bold Nature
+IVs: 6 Atk
+- Foul Play
+- Psychic Noise
+- Trick Room
+- Helping Hand
+
+Iron Hands @ Assault Vest
 Ability: Quark Drive
 Level: 50
-Tera Type: Poison
-EVs: 76 HP / 164 Atk / 12 Def / 252 SpD
+Tera Type: Bug
+EVs: 76 HP / 180 Atk / 12 Def / 236 SpD
 Brave Nature
 IVs: 0 Spe
 - Drain Punch
 - Low Kick
-- Heavy Slam
+- Wild Charge
 - Fake Out
+"""
+TEAM2="""
+Calyrex-Ice @ Clear Amulet
+Ability: As One (Glastrier)
+Level: 50
+Tera Type: Grass
+EVs: 252 HP / 172 Atk / 84 SpD
+Brave Nature
+IVs: 1 Spe
+- Glacial Lance
+- High Horsepower
+- Protect
+- Trick Room
 
-crimsonracer (Iron Treads) @ Choice Band
+Urshifu-Rapid-Strike (M) @ Focus Sash
+Ability: Unseen Fist
+Level: 50
+Tera Type: Water
+EVs: 252 Atk / 4 SpD / 252 Spe
+Adamant Nature
+- Surging Strikes
+- Close Combat
+- Aqua Jet
+- Detect
+
+Pelipper @ Life Orb
+Ability: Drizzle
+Level: 50
+Tera Type: Grass
+EVs: 252 HP / 252 SpA / 4 SpD
+Modest Nature
+IVs: 0 Atk
+- Weather Ball
+- Hurricane
+- Helping Hand
+- Wide Guard
+
+Amoonguss (M) @ Rocky Helmet
+Ability: Regenerator
+Level: 50
+Tera Type: Fire
+EVs: 236 HP / 228 Def / 44 SpD
+Relaxed Nature
+IVs: 0 Atk / 0 Spe
+- Spore
+- Rage Powder
+- Clear Smog
+- Pollen Puff
+
+Iron Valiant @ Booster Energy
 Ability: Quark Drive
 Level: 50
 Shiny: Yes
 Tera Type: Ghost
-EVs: 252 Atk / 36 SpD / 220 Spe
+EVs: 204 HP / 4 Atk / 100 Def / 28 SpD / 172 Spe
 Jolly Nature
-- High Horsepower
-- Iron Head
-- Steel Roller
-- Rock Slide
+- Spirit Break
+- Coaching
+- Wide Guard
+- Encore
 
-mythicdreamr (Farigiraf) (M) @ Electric Seed
-Ability: Armor Tail
+Landorus @ Choice Scarf
+Ability: Sheer Force
 Level: 50
-Shiny: Yes
-Tera Type: Water
-EVs: 228 HP / 164 Def / 116 SpD
-Bold Nature
-IVs: 20 Atk / 13 Spe
-- Psychic
-- Roar
-- Trick Room
-- Helping Hand
+Tera Type: Ghost
+EVs: 4 HP / 252 SpA / 252 Spe
+Modest Nature
+- Earth Power
+- Sandsear Storm
+- Sludge Bomb
+- U-turn
 """
 
 start_showdown() {
