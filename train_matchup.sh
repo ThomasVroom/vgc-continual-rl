@@ -160,7 +160,7 @@ start_showdown() {
 }
 
 mkdir -p "results1/saves-bc-sp-xm/2-teams"
-cp bc.zip "results1/saves-bc-sp-xm/2-teams/100.zip"
+cp bc-agent.zip "results1/saves-bc-sp-xm/2-teams/100.zip"
 echo "Starting Showdown server..."
 showdown_pid=$(start_showdown "$port")
 sleep 5  # give server time to start
