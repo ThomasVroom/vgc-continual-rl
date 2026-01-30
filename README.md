@@ -1,20 +1,14 @@
-# VGC-Bench
-This is the official code for [VGC-Bench: Towards Mastering Diverse Team Strategies in Competitive Pokémon](https://arxiv.org/abs/2506.10326).
+# VGC-Continual-RL
+This code is an adaptation of [VGC-Bench](https://github.com/cameronangliss/vgc-bench) that uses Continual Reinforcement Learning to reduce retraining costs.
 
-This benchmark includes:
-- multi-agent reinforcement learning (RL) with 4 Policy Space Response Oracle (PSRO) algorithms to fine-tune an agent initialized either randomly or with the output of the BC pipeline
-- a behavior cloning (BC) pipeline to gather human demonstrations, process them into state-action pairs, and train a model to imitate human play
-- a basic Large Language Model (LLM) player that any LLM can easily be plugged into
-- 3 heuristic players from [poke-env](https://github.com/hsahovic/poke-env)
-
-# 🛠️ Setup
+# Setup
 Prerequisites:
 1. Python (I use v3.13)
-1. NodeJS and npm (whatever pokemon-showdown requires)
+2. NodeJS and npm (whatever pokemon-showdown requires)
 
-Run the following to ensure that pokemon showdown is configured:
+Install a local copy of pokemon-showdown:
 ```
-git submodule update --init --recursive
+git clone -b vgc-bench --single-branch https://github.com/cameronangliss/pokemon-showdown.git
 cd pokemon-showdown
 npm i
 node pokemon-showdown start --no-security
@@ -26,20 +20,19 @@ RESTORE CHATROOM: staff
 Worker 1 now listening on 0.0.0.0:8000
 Test your server at http://localhost:8000
 ```
-This shows that you can locally host the showdown server.
 
 Install project dependencies by running:
 ```
 pip install .[dev]
 ```
 
-# 👨‍💻 How to use
+# How to use
 
 NOTE: Unless you're playing your policy on the live Pokémon Showdown servers with [play.py](vgc_bench/play.py), you must locally host your own server by running `node pokemon-showdown start <PORT> --no-security` from `pokemon-showdown/` (done automatically if using bash scripts).
 
 All `.py` files in `vgc_bench/` are scripts and (with the exception of [scrape_data.py](vgc_bench/scrape_data.py) and [visualize.py](vgc_bench/visualize.py)) have `--help` text. By contrast, all `.py` files in `vgc_bench/src/` are not scripts, and are not intended to be run standalone.
 
-## 🏆 Population-based Reinforcement Learning
+## Population-based Reinforcement Learning
 
 The training code offers the following PSRO algorithms:
 - pure self-play
@@ -56,7 +49,7 @@ The training code offers the following PSRO algorithms:
 
 See [train.sh](train.sh) for running multiple training runs simultaneously with automatic pokemon-showdown server management, or [train_matchup.sh](train_matchup.sh) for an example of training on a specific team matchup.
 
-## 📚 Behavior Cloning
+## Behavior Cloning
 
 1. [scrape_logs.py](vgc_bench/scrape_logs.py) scrapes logs from the [Pokémon Showdown replay database](https://replay.pokemonshowdown.com), automatically filtering out bad logs and only scraping logs with open team sheets (OTS)
     - optional parallelization (strongly recommended)
@@ -69,11 +62,11 @@ See [train.sh](train.sh) for running multiple training runs simultaneously with 
     - configurable fraction of dataset to load into memory at any given time (if not set low enough, program may run out of memory)
     - see [pretrain.sh](pretrain.sh) for running behavior cloning with automatic pokemon-showdown server management
 
-## 🤖 LLMs
+## LLMs
 
 See [llm.py](vgc_bench/src/llm.py) for the provided LLMPlayer wrapper class. We use `meta-llama/Meta-Llama-3.1-8B-Instruct`, but the user may replace logic in the `setup_llm` and `get_response` methods to use a different LLM.
 
-## 🎲 Heuristics
+## Heuristics
 
 See [poke-env](https://github.com/hsahovic/poke-env) for detailed examples of using the heuristic players. For example:
 
@@ -90,7 +83,7 @@ results = asyncio.run(cross_evaluate([random_player, mbp_player, sh_player], n_c
 print(results)
 ```
 
-## 📊 Evaluation
+## Evaluation
 
 - [eval.py](vgc_bench/eval.py) runs the cross-play evaluation, performance test, generalization test, and ranking algorithm as described in our paper (see above)
     - see [eval.sh](eval.sh) for running multiple evaluations simultaneously with automatic pokemon-showdown server management
@@ -128,13 +121,3 @@ This test compares the performance of the strongest method on average across run
 | 64 (BCSP) | 0.669    | 0.578    | 0.564     | --        |
 
 See our paper for further results and details.
-
-# 📜 Cite us
-
-```bibtex
-@inproceedings{anglissvgc,
-  title={VGC-Bench: Towards Mastering Diverse Team Strategies in Competitive Pok{\'e}mon},
-  author={Angliss, Cameron L and Cui, Jiaxun and Hu, Jiaheng and Rahman, Arrasy and Stone, Peter},
-  booktitle={The 25th International Conference on Autonomous Agents and Multi-Agent Systems}
-}
-```

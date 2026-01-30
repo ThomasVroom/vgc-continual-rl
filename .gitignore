@@ -7,3 +7,5 @@ trajs/
 *.egg-info
 debug*.log
 profile.prof
+.venv/
+pokemon-showdown/
